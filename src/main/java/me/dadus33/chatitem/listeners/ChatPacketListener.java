@@ -39,13 +39,13 @@ public class ChatPacketListener extends PacketAdapter {
 
     public ChatPacketListener(Plugin plugin, ListenerPriority listenerPriority, Storage s, PacketType... types) {
         super(plugin, listenerPriority, types);
-        if(ChatItem.supportsShulkerBoxes()){
+       /* if(ChatItem.supportsShulkerBoxes()){
             SHULKER_BOXES.addAll(Arrays.asList(Material.BLACK_SHULKER_BOX, Material.BLUE_SHULKER_BOX,
                     Material.BROWN_SHULKER_BOX, Material.CYAN_SHULKER_BOX, Material.GRAY_SHULKER_BOX, Material.GREEN_SHULKER_BOX,
                     Material.LIGHT_BLUE_SHULKER_BOX, Material.LIME_SHULKER_BOX, Material.MAGENTA_SHULKER_BOX, Material.ORANGE_SHULKER_BOX,
                     Material.PINK_SHULKER_BOX, Material.PURPLE_SHULKER_BOX, Material.RED_SHULKER_BOX, Material.LIGHT_GRAY_SHULKER_BOX,
                     Material.WHITE_SHULKER_BOX, Material.YELLOW_SHULKER_BOX));
-        }
+        }*/
         c = s;
     }
 
@@ -97,7 +97,8 @@ public class ChatPacketListener extends PacketAdapter {
         if(!packet.hasMetadata("parse")){ //First we check if the packet validator has validated this packet to be parsed by us
             return;
         }
-        final boolean usesBaseComponents = (boolean)packet.getMetadata("base-component"); //The packet validator should also tell if this packet uses base components
+        final boolean usesBaseComponents = false;
+        // final boolean usesBaseComponents = (boolean)packet.getMetadata("base-component"); //The packet validator should also tell if this packet uses base components
         e.setCancelled(true); //We cancel the packet as we're going to resend it anyways (ignoring listeners this time)
         Bukkit.getScheduler().runTaskAsynchronously(ChatItem.getInstance(), () -> {
             String json = (String)packet.getMetadata("json"); //The packet validator got the json for us, so no need to get it again
@@ -127,7 +128,7 @@ public class ChatPacketListener extends PacketAdapter {
             try {
                 if(!p.getItemInHand().getType().equals(Material.AIR)) {
                     ItemStack copy = p.getItemInHand().clone();
-                    if(copy.getType().equals(Material.WRITABLE_BOOK) || copy.getType().equals(Material.WRITTEN_BOOK)){ //filtering written books
+                    if(copy.getType().equals(Material.BOOK_AND_QUILL) || copy.getType().equals(Material.WRITTEN_BOOK)){ //filtering written books
                         BookMeta bm = (BookMeta)copy.getItemMeta();
                         bm.setPages(Collections.emptyList());
                         copy.setItemMeta(bm);
