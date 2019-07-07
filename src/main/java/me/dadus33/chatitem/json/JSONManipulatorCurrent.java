@@ -13,6 +13,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFactory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.PotionEffect;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -88,7 +90,6 @@ public class JSONManipulatorCurrent implements JSONManipulator{
 
     public String parse(String json, List<String> replacements, ItemStack item, String replacement, int protocol) throws InvocationTargetException, IllegalAccessException, InstantiationException, NoSuchFieldException, NoSuchMethodException {
         JsonObject obj = PARSER.parse(json).getAsJsonObject();
-        Bukkit.broadcastMessage(json);
 
         JsonArray array = obj.getAsJsonArray("extra");
         replaces = replacements;
@@ -784,10 +785,18 @@ public class JSONManipulatorCurrent implements JSONManipulator{
     }
 
     private String stringifyItem(ItemStack stack) throws InvocationTargetException, IllegalAccessException, InstantiationException, NoSuchFieldException, NoSuchMethodException {
-       // return JsonUtil.toJson(stack);
-        ItemMeta meta = stack.hasItemMeta() ? stack.getItemMeta() : null;
-        String name = meta == null ? stack.getI18NDisplayName() : meta.getDisplayName();
-        if (name == null){
+        PotionMeta m = null;
+        ItemMeta meta = null;
+        String name = "";
+        boolean potion = false;
+        if (stack.getType().equals(Material.POTION) || stack.getType().equals(Material.SPLASH_POTION) || stack.getType().equals(Material.LINGERING_POTION)){
+            m = stack.hasItemMeta() ? (PotionMeta)stack.getItemMeta() : null;
+             name = stack.getI18NDisplayName();
+            potion = true;
+        }else{
+            meta = stack.hasItemMeta() ? stack.getItemMeta() : null;
+             name = stack.getI18NDisplayName();
+
         }
         if (stack.getType().equals((Object) Material.AIR)) {
             name = "Nothing";
@@ -799,10 +808,11 @@ public class JSONManipulatorCurrent implements JSONManipulator{
         for (final Enchantment en : enchants.keySet()) {
             lore.append("§7" + getName(en) + " " + enchants.get(en)).append("\n");
         }
+
         //enchantments
 
         //lore
-        if (meta != null && !meta.getLore().isEmpty()) {
+        if (meta != null && meta.hasLore()) {
                 for (final String l : meta.getLore()) {
                     lore.append("§5").append(l).append("\n");
                 }
@@ -814,13 +824,17 @@ public class JSONManipulatorCurrent implements JSONManipulator{
         String[] st = stack.getType().name().toLowerCase().split("_");
         StringBuilder stb = new StringBuilder();
         for (String s : st){
-           stb.append(s.substring(0, 1).toUpperCase() + s.substring(1));
+           stb.append(s.substring(0, 1).toUpperCase() + s.substring(1)).append(" ");
         }
         lore.append("§8" + stb.toString());
         //item type
         String finallore = lore.toString();
         if (finallore.endsWith("\n")) {
             finallore = finallore.substring(0, finallore.length() - 1);
+        }
+        if (potion){
+            finallore += "\n" + m.getBasePotionData().getType().getEffectType().getName();
+
         }
 
        return finallore;
