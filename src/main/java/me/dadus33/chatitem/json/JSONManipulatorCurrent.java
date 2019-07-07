@@ -4,12 +4,15 @@ package me.dadus33.chatitem.json;
 import com.github.steveice10.opennbt.tag.builtin.*;
 import com.google.gson.*;
 import me.dadus33.chatitem.ChatItem;
-import me.dadus33.chatitem.utils.Item;
-import me.dadus33.chatitem.utils.ProtocolVersion;
-import me.dadus33.chatitem.utils.Reflect;
+import me.dadus33.chatitem.utils.*;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemFactory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -85,6 +88,8 @@ public class JSONManipulatorCurrent implements JSONManipulator{
 
     public String parse(String json, List<String> replacements, ItemStack item, String replacement, int protocol) throws InvocationTargetException, IllegalAccessException, InstantiationException, NoSuchFieldException, NoSuchMethodException {
         JsonObject obj = PARSER.parse(json).getAsJsonObject();
+        Bukkit.broadcastMessage(json);
+
         JsonArray array = obj.getAsJsonArray("extra");
         replaces = replacements;
         String regex = "";
@@ -110,7 +115,7 @@ public class JSONManipulatorCurrent implements JSONManipulator{
         if ((itemTooltip = STACKS.get(p)) == null) {
             JsonArray use = Translator.toJson(replacement); //We get the json representation of the old color formatting method
 
-            JsonObject hover = PARSER.parse("{\"action\":\"show_item\", \"value\": \"\"}").getAsJsonObject(); //There's no public clone method for JSONObjects so we need to parse them every time
+            JsonObject hover = PARSER.parse("{\"action\":\"show_text\", \"value\": \"\"}").getAsJsonObject(); //There's no public clone method for JSONObjects so we need to parse them every time
 
             String jsonRep = stringifyItem(item); //Get the JSON representation of the item (well, not really JSON, but rather a string representation of NBT data)
             hover.addProperty("value", jsonRep);
@@ -779,40 +784,46 @@ public class JSONManipulatorCurrent implements JSONManipulator{
     }
 
     private String stringifyItem(ItemStack stack) throws InvocationTargetException, IllegalAccessException, InstantiationException, NoSuchFieldException, NoSuchMethodException {
-        Item item = toItem(stack);
-        ProtocolVersion.remapIds(ProtocolVersion.getServerVersion().MAX_VER, protocolVersion.MAX_VER, item);
-        StringBuilder sb = new StringBuilder("{id:");
-        sb.append("\"").append(item.getId()).append("\"").append(","); //Append the id
-        sb.append("Count:").append(item.getAmount()).append("b,"); //Append the amount
-        sb.append("Damage:").append(item.getData()).append("s"); //Append the durability data
+       // return JsonUtil.toJson(stack);
+        ItemMeta meta = stack.hasItemMeta() ? stack.getItemMeta() : null;
+        String name = meta == null ? stack.getI18NDisplayName() : meta.getDisplayName();
+        if (name == null){
+        }
+        if (stack.getType().equals((Object) Material.AIR)) {
+            name = "Nothing";
+        }
+        final StringBuilder lore = new StringBuilder(name).append("\n");
 
-        Map<String, Tag> tagMap = item.getTag().getValue();
-        if(tagMap.isEmpty()){
-            sb.append("}");
-            return sb.toString();
+        //enchantments
+        final Map<Enchantment, Integer> enchants = (Map<Enchantment, Integer>)stack.getEnchantments();
+        for (final Enchantment en : enchants.keySet()) {
+            lore.append("§7" + getName(en) + " " + enchants.get(en)).append("\n");
         }
-        Set<Map.Entry<String, Tag>> entrySet = tagMap.entrySet();
-        boolean first = true;
-        sb.append(",tag:{"); //Start of the tag
-        for(Map.Entry<String, Tag> entry : entrySet){
-            String key = entry.getKey();
-            if(IGNORED.contains(key)){
-                continue;
-            }
-            Pattern pattern = Pattern.compile("[{}\\[\\],\":\\\\/]");
-            Matcher matcher = pattern.matcher(key);
-            if(matcher.find()){
-                continue; //Skip invalid keys, as they can cause exceptions client-side
-            }
-            String value = stringifyTag(entry.getValue());
-            if(!first){
-                sb.append(",");
-            }
-            sb.append(key).append(":").append(value);
-            first = false;
+        //enchantments
+
+        //lore
+        if (meta != null && !meta.getLore().isEmpty()) {
+                for (final String l : meta.getLore()) {
+                    lore.append("§5").append(l).append("\n");
+                }
+
         }
-        sb.append("}}"); //End of tag and end of item
-        return sb.toString();
+        //lore
+
+        //item type
+        String[] st = stack.getType().name().toLowerCase().split("_");
+        StringBuilder stb = new StringBuilder();
+        for (String s : st){
+           stb.append(s.substring(0, 1).toUpperCase() + s.substring(1));
+        }
+        lore.append("§8" + stb.toString());
+        //item type
+        String finallore = lore.toString();
+        if (finallore.endsWith("\n")) {
+            finallore = finallore.substring(0, finallore.length() - 1);
+        }
+
+       return finallore;
     }
 
     private String stringifyTag(Tag normalTag){
@@ -904,6 +915,81 @@ public class JSONManipulatorCurrent implements JSONManipulator{
             }
             return null; //Should never happen
         }
+    }
+
+    public String getName(final Enchantment ench) {
+        final String name = ench.getName();
+        final String s;
+        switch (s = name) {
+            case "OXYGEN": {
+                return "Respiration";
+            }
+            case "DAMAGE_ARTHROPODS": {
+                return "Bane Of Arthropods";
+            }
+            case "PROTECTION_PROJECTILE": {
+                return "Projectile Protection";
+            }
+            case "DAMAGE_ALL": {
+                return "Sharpness";
+            }
+            case "ARROW_FIRE": {
+                return "Flame";
+            }
+            case "PROTECTION_FALL": {
+                return "Feather Falling";
+            }
+            case "PROTECTION_FIRE": {
+                return "Fire Protection";
+            }
+            case "KNOCKBACK": {
+                return "Knockback";
+            }
+            case "FIRE_ASPECT": {
+                return "Fire Aspect";
+            }
+            case "WATER_WORKER": {
+                return "Aqua Affinity";
+            }
+            case "ARROW_DAMAGE": {
+                return "Power";
+            }
+            case "ARROW_KNOCKBACK": {
+                return "Punch";
+            }
+            case "PROTECTION_ENVIRONMENTAL": {
+                return "Protection";
+            }
+            case "LOOT_BONUS_BLOCKS": {
+                return "Fortune";
+            }
+            case "DURABILITY": {
+                return "Unbreaking";
+            }
+            case "LOOT_BONUS_MOBS": {
+                return "Looting";
+            }
+            case "DIG_SPEED": {
+                return "Efficiency";
+            }
+            case "ARROW_INFINITE": {
+                return "Infinity";
+            }
+            case "DAMAGE_UNDEAD": {
+                return "Smite";
+            }
+            case "SILK_TOUCH": {
+                return "Silk Touch";
+            }
+            case "PROTECTION_EXPLOSIONS": {
+                return "Blast Protection";
+            }
+            case "MENDING": {
+                return "Mending";            }
+            default:
+                break;
+        }
+        throw new RuntimeException("Unknown Enchantment");
     }
 
 
