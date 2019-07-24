@@ -942,10 +942,10 @@ public class JSONManipulatorCurrent implements JSONManipulator{
                 return "Bane Of Arthropods";
             }
             case "VANISHING_CURSE": {
-                return "Curse Of Vanishing";
+                return "§cCurse Of Vanishing";
             }
             case "BINDING_CURSE": {
-                return "Curse Of Binding";
+                return "§cCurse Of Binding";
             }
             case "PROTECTION_PROJECTILE": {
                 return "Projectile Protection";
