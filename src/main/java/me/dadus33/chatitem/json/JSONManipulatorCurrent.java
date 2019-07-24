@@ -934,12 +934,19 @@ public class JSONManipulatorCurrent implements JSONManipulator{
     public String getName(final Enchantment ench) {
         final String name = ench.getName();
         final String s;
+        Bukkit.broadcastMessage(name);
         switch (s = name) {
             case "OXYGEN": {
                 return "Respiration";
             }
             case "DAMAGE_ARTHROPODS": {
                 return "Bane Of Arthropods";
+            }
+            case "VANISHING_CURSE": {
+                return "Curse Of Vanishing";
+            }
+            case "BINDING_CURSE": {
+                return "Curse Of Binding";
             }
             case "PROTECTION_PROJECTILE": {
                 return "Projectile Protection";
