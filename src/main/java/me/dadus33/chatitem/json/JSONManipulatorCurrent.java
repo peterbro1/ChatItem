@@ -934,7 +934,6 @@ public class JSONManipulatorCurrent implements JSONManipulator{
     public String getName(final Enchantment ench) {
         final String name = ench.getName();
         final String s;
-        Bukkit.broadcastMessage(name);
         switch (s = name) {
             case "OXYGEN": {
                 return "Respiration";
