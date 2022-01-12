@@ -3,3 +3,6 @@ A fork of dadus33's ChatItem. Patched it for 1.14.2 client support on 1.12.2 hos
 # Building
 Building this is simple as we use Maven.
 To build it, simply clone this repository and then run `mvn clean install`.
+
+
+#### There is no documentation or support as this was a privately contracted project never meant to be shared publicly. This is now abandoned, and I do not plan to maintain it.
